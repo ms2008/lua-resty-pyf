@@ -1,0 +1,26 @@
+CC      := gcc
+LD      := ld
+CFLAGS  := -fPIC -O2 -Wall -Werror -fno-stack-protector
+LDFLAGS := -shared
+SOURCE  := $(wildcard pinyin/*.c)
+OBJS    := $(patsubst %.c,%.o,$(SOURCE))
+TARGET_LIB := pinyin.so
+LUA_LIBDIR ?= ./
+
+all:$(OBJS)
+	@echo $(OBJS)
+	$(LD) $(LDFLAGS) -o $(TARGET_LIB) $(OBJS)
+	@rm *.o pinyin/*.o -rf
+	@luajit pinyin_ffi_test.lua
+
+%.o:%.c
+	@echo Compiling $< ...
+	@$(CC) -c $(CFLAGS) $< -o $*.o
+
+.PHONY: clean
+
+install: pinyin.so
+	cp pinyin.so $(LUA_LIBDIR)
+
+clean:
+	rm *.so *.o pinyin/*.so pinyin/*.o -rf
