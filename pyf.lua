@@ -60,6 +60,7 @@ local function load_pyf_parser()
     end
 end
 
+-- Unicode code point range[19968, 20902]
 local function pinyinFirstLetter(hanzi)
     if not pyf_lib then
         pyf_lib = load_pyf_parser()
