@@ -11,7 +11,7 @@ all:$(OBJS)
 	@echo $(OBJS)
 	$(LD) $(LDFLAGS) -o $(TARGET_LIB) $(OBJS)
 	@rm *.o pinyin/*.o -rf
-	@luajit pinyin_ffi_test.lua
+	@luajit pyf_test.lua
 
 %.o:%.c
 	@echo Compiling $< ...
