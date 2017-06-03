@@ -5,7 +5,7 @@ LDFLAGS := -shared
 SOURCE  := $(wildcard pinyin/*.c)
 OBJS    := $(patsubst %.c,%.o,$(SOURCE))
 TARGET_LIB := pinyin.so
-LUA_LIBDIR ?= ./
+LUA_LIBDIR ?= /usr/local/openresty/lualib
 
 all:$(OBJS)
 	@echo $(OBJS)
@@ -21,6 +21,7 @@ all:$(OBJS)
 
 install: pinyin.so
 	cp pinyin.so $(LUA_LIBDIR)
+	cp pyf.lua $(LUA_LIBDIR)/resty
 
 clean:
 	rm *.so *.o pinyin/*.so pinyin/*.o -rf

@@ -8,16 +8,19 @@ local ffi_str = ffi.string
 local bit_band = bit.band
 local bit_bor = bit.bor
 local bit_lshift = bit.lshift
+local bit_rshift = bit.rshift
 local string_format = string.format
 local string_gmatch = string.gmatch
 local string_match = string.match
 local string_byte = string.byte
 local string_char = string.char
+local string_sub = string.sub
 local table_concat = table.concat
 local io_open = io.open
 local io_close = io.close
 local ipairs = ipairs
 local tonumber = tonumber
+local type = type
 
 ffi.cdef[[
     char pinyinFirstLetter(unsigned short hanzi);
@@ -60,7 +63,7 @@ local function load_pyf_parser()
     end
 end
 
--- Unicode code point range[19968, 20902]
+-- Unicode code point range[19968, 40870]
 local function pinyinFirstLetter(hanzi)
     if not pyf_lib then
         pyf_lib = load_pyf_parser()
@@ -106,6 +109,43 @@ local function utf8_to_unicode(str)
     return table_concat(res, "")
 end
 
+-- unicode to utf8
+local function unicode_to_utf8(convertStr)
+    if type(convertStr) ~= "string" then
+        return convertStr
+    end
+
+    local res, i = {}, 1
+    while true do
+        local num1 = string_byte(convertStr,i)
+        local unicode
+
+        if num1 ~= nil and string_sub(convertStr,i,i+1) == "\\u" then
+            unicode = tonumber("0x"..string_sub(convertStr,i+2,i+5))
+            i = i + 6
+        elseif num1 ~= nil then
+            unicode = num1
+            i = i + 1
+        else
+            break
+        end
+
+        if unicode <= 0x007f then
+            res[#res + 1] = string_char(bit.band(unicode,0x7f))
+        elseif unicode >= 0x0080 and unicode <= 0x07ff then
+            res[#res + 1] = string_char(bit_bor(0xc0,bit_band(bit_rshift(unicode,6),0x1f)))
+            res[#res + 1] = string_char(bit_bor(0x80,bit_band(unicode,0x3f)))
+        elseif unicode >= 0x0800 and unicode <= 0xffff then
+            res[#res + 1] = string_char(bit_bor(0xe0,bit_band(bit_rshift(unicode,12),0x0f)))
+            res[#res + 1] = string_char(bit_bor(0x80,bit_band(bit_rshift(unicode,6),0x3f)))
+            res[#res + 1] = string_char(bit_bor(0x80,bit_band(unicode,0x3f)))
+        end
+    end
+
+    res[#res + 1] = '\0'
+    return table_concat(res, "")
+end
+
 local function uniStr(str)
     if not str then
         return nil
@@ -123,6 +163,17 @@ function _M:pinyin(s)
         pyf[i] = pinyinFirstLetter(tonumber(utf8_to_unicode(v), 16))
     end
     return table_concat(pyf, "")
+end
+
+-- experimental test
+function _M:jieba(l)
+    local hanzi = {}
+    math.randomseed(os.time())
+    for i=1,l,1 do
+        local s = string_format("\\u%04x", math.random(19968, 40869))
+        hanzi[i] = unicode_to_utf8(s)
+    end
+    return table_concat(hanzi, "")
 end
 
 return _M
