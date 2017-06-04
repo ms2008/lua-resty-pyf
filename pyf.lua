@@ -18,6 +18,9 @@ local string_sub = string.sub
 local table_concat = table.concat
 local io_open = io.open
 local io_close = io.close
+local math_randomseed = math.randomseed
+local math_random = math.random
+local os_time = os.time
 local ipairs = ipairs
 local tonumber = tonumber
 local type = type
@@ -168,9 +171,9 @@ end
 -- experimental test
 function _M:jieba(l)
     local hanzi = {}
-    math.randomseed(os.time())
+    math_randomseed(os_time())
     for i=1,l,1 do
-        local s = string_format("\\u%04x", math.random(19968, 40869))
+        local s = string_format("\\u%04x", math_random(19968, 40869))
         hanzi[i] = unicode_to_utf8(s)
     end
     return table_concat(hanzi, "")
